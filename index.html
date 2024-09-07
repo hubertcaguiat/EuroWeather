@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Forecast</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.9/css/weather-icons.min.css">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22256%22 height=%22256%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2250%22 fill=%22%230058ff%22></rect><path fill=%22%23fff%22 d=%22M72.15 21.33L72.15 21.33Q74.49 22.50 74.90 25.02Q75.30 27.54 73.59 29.61L73.59 29.61Q72.42 31.23 70.58 31.41Q68.73 31.59 66.84 30.69L66.84 30.69Q64.68 29.70 62.30 29.16Q59.91 28.62 57.30 28.62L57.30 28.62Q52.44 28.62 48.62 30.15Q44.79 31.68 42.09 34.52Q39.39 37.35 38.00 41.22Q36.60 45.09 36.60 49.77L36.60 49.77Q36.60 55.26 38.18 59.31Q39.75 63.36 42.54 66.06Q45.33 68.76 49.11 70.07Q52.89 71.37 57.30 71.37L57.30 71.37Q59.73 71.37 62.16 70.92Q64.59 70.47 66.84 69.30L66.84 69.30Q68.73 68.40 70.58 68.67Q72.42 68.94 73.68 70.56L73.68 70.56Q75.48 72.81 74.99 75.20Q74.49 77.58 72.24 78.66L72.24 78.66Q69.90 79.83 67.43 80.60Q64.95 81.36 62.43 81.77Q59.91 82.17 57.30 82.17L57.30 82.17Q50.82 82.17 45.02 80.10Q39.21 78.03 34.67 73.98Q30.12 69.93 27.51 63.86Q24.90 57.78 24.90 49.77L24.90 49.77Q24.90 42.84 27.29 36.99Q29.67 31.14 34.04 26.87Q38.40 22.59 44.34 20.21Q50.28 17.82 57.30 17.82L57.30 17.82Q61.26 17.82 65.04 18.72Q68.82 19.62 72.15 21.33Z%22></path></svg>" />
+
+  <style>
+    /* Basic CSS for layout and weather card styling */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+background-color:#dedede;
+    }
+
+    .banner {
+      text-align: center;
+      margin: 20px;
+    }
+
+    #citySelect {
+      padding: 8px;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    #fetchWeatherButton {
+      padding: 8px 16px;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+
+    #weather {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .weather-card {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 15px;
+      width: 180px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      background-color: #f9f9f9;
+    }
+
+    .weather-icon {
+      font-size: 40px; /* Adjust icon size */
+      margin-bottom: 10px;
+      color: #ffcc00; /* Optional: set the color of the icon */
+    }
+
+    h4, p {
+      margin: 5px 0;
+    }
+
+    .small {
+      font-size: 12px;
+      color: #666;
+    }
+
+    footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 20px;
+  font-size: 14px;
+  color: #666;
+  background-color: #f1f1f1;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+}
+
+footer .footer-content {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+footer p {
+  margin: 0;
+}
+
+footer .left {
+  text-align: left;
+}
+
+footer .right {
+  text-align: right; padding-right:30px;
+}
+
+
+    .content {
+      flex: 1; /* This pushes the footer to the bottom */
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="content">
+    <div class="banner">
+      <h1>Weather Forecast in Europe</h1>
+      <div>
+        <select id="citySelect">
+          <option value="">Select a city</option>
+        </select>
+        <button id="fetchWeatherButton">Display Forecast</button>
+      </div>
+
+      <div id="cityName"></div>
+      <div id="weather"></div> 
+
+
+    </div>
+  </div>
+
+ <footer>
+  <div class="footer-content">
+    <p class="left">by: Mr. Hubert I. Caguiat</p>
+    <p class="right">Powered by <a href="https://www.7timer.info/doc.php#graphical_api" target="_blank">7Timer API</a>.</p>
+  </div>
+</footer>
+
+  <script>
+    // Get references to HTML elements
+    const weatherContainer = document.getElementById("weather");
+    const cityName = document.getElementById("cityName");
+    const select = document.getElementById("citySelect");
+    const fetchButton = document.getElementById("fetchWeatherButton");
+
+    // Variable to store city data
+    let cityData;
+
+    // Event listener for the fetch button click
+    fetchButton.addEventListener("click", fetchWeatherForSelectedCity);
+
+    // Function to fetch city data from JSON file
+    function fetchData() {
+      return fetch("./city_coordinates.json")
+        .then((response) => response.json())
+        .then((data) => {
+          // Store fetched city data
+          cityData = data;
+          // Populate the city selection dropdown
+          populateSelect(cityData);
+        });
+    }
+
+    // Function to populate the city selection dropdown
+    function populateSelect(cityData) {
+      cityData.forEach((cityInfo) => {
+        const option = document.createElement("option");
+        option.value = cityInfo.city;
+        option.textContent = cityInfo.city;
+        select.appendChild(option);
+      });
+    }
+
+    function formatDate(yyyymmdd) {
+      // Extract year, month, and day from the input string
+      const year = yyyymmdd.substring(0, 4);
+      const month = yyyymmdd.substring(4, 6);
+      const day = yyyymmdd.substring(6, 8);
+
+      // Create a Date object from the extracted values
+      const date = new Date(`${year}-${month}-${day}`);
+
+      // Define options for formatting the date
+      const options = {
+        weekday: "long", // Full weekday name
+        day: "numeric", // Numeric day of the month
+        month: "long", // Full month name
+        year: "numeric", // Numeric year
+      };
+
+      // Format the date using toLocaleDateString
+      return date.toLocaleDateString(undefined, options);
+    }
+
+    const weatherMapping = {
+      clear: "wi-day-sunny",
+      pcloudy: "wi-day-cloudy",
+      mcloudy: "wi-cloudy",
+      cloudy: "wi-cloudy",
+      rain: "wi-rain",
+      humid: "wi-humidity",
+      ishower: "wi-day-showers",
+      lightrain: "wi-day-rain",
+      oshower: "wi-day-rain-mix",
+      snow: "wi-snow",
+      lightsnow: "wi-snow",
+      ts: "wi-thunderstorm",
+      rainsnow: "wi-rain-mix",
+    };
+
+    const weatherTypeMapping = {
+      clear: "Clear",
+      pcloudy: "Partially cloudy",
+      mcloudy: "Mostly cloudy",
+      cloudy: "Cloudy",
+      rain: "Rain",
+      humid: "Humid",
+      ishower: "Shower",
+      lightrain: "Light rain",
+      oshower: "Occasional shower",
+      snow: "Snow",
+      lightsnow: "Light snow",
+      ts: "Thunderstorm",
+      rainsnow: "Rain and snow",
+    };
+
+    function updateWeatherDisplay(data) {
+      weatherContainer.innerHTML = ""; // Clear existing content
+
+      data.dataseries.forEach((item) => {
+        const formattedDate = formatDate(item.date.toString());
+
+        // Create a div element for the weather card
+        const weatherCard = document.createElement("div");
+        weatherCard.className = "weather-card";
+
+        // Create the weather icon element
+        const weatherIcon = document.createElement("i");
+        weatherIcon.className = "weather-icon wi"; // `wi` for Weather Icons
+        
+        // Add the specific weather icon class based on the weather condition
+        const weatherIconClass = weatherMapping[item.weather];
+        if (weatherIconClass) {
+          weatherIcon.classList.add(weatherIconClass);
+        }
+
+        // Append the weather icon to the card
+        weatherCard.appendChild(weatherIcon);
+
+        // Add weather details
+        weatherCard.innerHTML += `
+          <h4>${weatherTypeMapping[item.weather]}</h4>
+          <p>Max: <strong>${item.temp2m.max}°C</strong></p>
+          <p>Min: <strong>${item.temp2m.min}°C</strong></p>
+          <p class="small">${formattedDate}</p>
+        `;
+
+        // Append the weather card to the container
+        weatherContainer.appendChild(weatherCard);
+      });
+    }
+
+    // Function to fetch weather data for a specific city
+    function getWeather(longitude, latitude, city, country) {
+      const url = `https://www.7timer.info/bin/civillight.php?lon=${longitude}&lat=${latitude}&ac=0&unit=metric&output=json&tzshift=0`;
+
+      return fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          let html = `<h3>Daily weather for the next 7 days in ${city}, ${country}</h3>`;
+          cityName.innerHTML = html;
+          updateWeatherDisplay(data);
+        });
+    }
+
+    // Function to fetch and display weather data for the selected city
+    function fetchWeatherForSelectedCity() {
+      const selectedCity = select.value;
+      if (selectedCity) {
+        const cityInfo = cityData.find((city) => city.city === selectedCity);
+        if (cityInfo) {
+          // Call the getWeather function with city details
+          getWeather(cityInfo.longitude, cityInfo.latitude, cityInfo.city, cityInfo.country);
+        }
+      }
+    }
+
+    // Fetch city data
+    fetchData();
+  </script>
+
+</body>
+</html>
